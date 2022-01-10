@@ -2,7 +2,7 @@
 Brings Spotify Group Sessions to the desktop client.
 
 ![Start Session](prev1.png)
-![Open Session](prev1.png)
+![Open Session](prev2.png)
 
 ## Installation
 1. Install [Spicetify](https://github.com/khanhas/spicetify-cli)
