@@ -19,3 +19,7 @@ Brings Spotify Group Sessions to the desktop client.
 - [x] See listeners
 
 *Note:* Currently it is only possible to be the host of a session.
+
+## Usage
+The extension is enabled by default. You'll find the group session in the device menu, just as on mobile.
+Additionally, there is a menu in the top right corner accessible by clicking on your name. There you can enable/disable the extension and toggle the option to show the spotify code also in full screen. 
