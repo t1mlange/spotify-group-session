@@ -9,12 +9,13 @@ Brings Spotify Group Sessions to the desktop client.
 3. Run `spicetify config extensions group-session.js`
 4. Run `spicetify backup apply`
 
-## Features/ToDo
+## Features
 
 - [x] Start Session
 - [x] Close Session
 - [x] Show Spotify Code (used to join via scan)
 - [x] Allow copying invite link
-- [ ] Option: Show Spotify Code in fullscreen mode
-- [ ] See/Kick listeners
+- [x] Option: Show Spotify Code in fullscreen mode
+- [x] See listeners
 
+*Note:* Currently it is only possible to be the host of a session.
