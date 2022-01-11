@@ -8,8 +8,8 @@
 
 (function GroupSession() {
     let isEnabled = true;
-    let join_img;
     let session_id;
+    let join_session_token;
 
     let createSession = async () => {
         const local_device_id = Spicetify.Player.data.play_origin.device_identifier;
@@ -21,12 +21,7 @@
         const res_join = await Spicetify.CosmosAsync.get(`https://spclient.wg.spotify.com/social-connect/v2/sessions/current_or_new?local_device_id=${local_device_id}&type=REMOTE`);
 
         session_id = res_join.session_id;
-
-        const session_token = res_join.join_session_token;
-        const img_bg_color = "1ED760"; // spotify green
-        const img_text_color = "black"; // or white
-        const width = "600";
-        join_img = `https://scannables.scdn.co/uri/plain/png/${img_bg_color}/${img_text_color}/${width}/spotify%3Asocialsession%3A${session_token}`;
+        join_session_token = res_join.join_session_token;
     }
 
     let deleteSession = async () => {
@@ -46,7 +41,7 @@
 
         // cleanup
         session_id = null;
-        join_img = null;
+        join_session_token = null;
     }
 
     let buildContainerAndTitle = () => {
@@ -109,12 +104,27 @@
 
     let buildSessionMenu = () => {
         const containerDiv = buildContainerAndTitle();
+        
+        const img_bg_color = "1ED760"; // spotify green
+        const img_text_color = "black"; // or white
+        const width = "600";
+        const join_img = `https://scannables.scdn.co/uri/plain/png/${img_bg_color}/${img_text_color}/${width}/spotify%3Asocialsession%3A${join_session_token}`;
 
         const imgEl = document.createElement("img");
         imgEl.src = join_img;
         imgEl.style.width = "100%";
         imgEl.style.paddingBottom = "12px";
         containerDiv.appendChild(imgEl);
+
+        const copyLink = document.createElement("input");
+        copyLink.id = "spicetify-group-session-menu-link";
+        copyLink.type = "text";
+        copyLink.readOnly = true;
+        copyLink.value = `https://open.spotify.com/socialsession/${join_session_token}`;
+        copyLink.classList.add("main-playlistEditDetailsModal-textElement", "main-playlistEditDetailsModal-titleInput");
+        copyLink.style.marginBottom = "12px";
+        containerDiv.appendChild(copyLink);
+
 
         const closeButton = document.createElement("button");
         closeButton.addEventListener("click", buttonLeave);
@@ -133,11 +143,11 @@
         }
         // get the new menu
         let containerDiv;
-        if (session_id != null && join_img != null) {
+        if (session_id != null && join_session_token != null) {
             containerDiv = buildSessionMenu();
         } else {
             session_id = null;
-            join_img = null;
+            join_session_token = null;
             containerDiv = buildStartMenu();
         }
         // add it to the device menu if possible
@@ -162,6 +172,7 @@
         }
 
         // Exit if the added element is not the devices menu
+        // @ts-ignore
         if (!target.classList.contains("connect-device-list-container--is-visible")) {
             return;
         }

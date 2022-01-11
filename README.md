@@ -15,7 +15,7 @@ Brings Spotify Group Sessions to the desktop client.
 - [x] Start Session
 - [x] Close Session
 - [x] Show Spotify Code (used to join via scan)
-- [ ] Allow copying invite link
+- [x] Allow copying invite link
 - [ ] Option: Show Spotify Code in fullscreen mode
 - [ ] See/Kick listeners
 
