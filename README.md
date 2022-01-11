@@ -5,7 +5,7 @@ Brings Spotify Group Sessions to the desktop client.
 
 ## Installation
 1. Install [Spicetify](https://github.com/khanhas/spicetify-cli)
-2. Download [group-session.js](https://github.com/timll/spotify-group-session/blob/main/src/group-session.js) and save it to Spicify's Extension folder.
+2. Download [group-session.js](https://github.com/timll/spotify-group-session/blob/main/src/group-session.js) and save it to Spicetify's Extension folder.
 3. Run `spicetify config extensions group-session.js`
 4. Run `spicetify backup apply`
 
