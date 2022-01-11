@@ -1,0 +1,10 @@
+{
+    "name": "Spotify Group Session",
+    "description": "Brings Spotify group session to desktop",
+    "preview": "preview.png",
+    "main": "src/group-session.js",
+    "readme": "README.md",
+    "authors": [
+        { "name": "Tim Lange", "url": "https://github.com/timll" }
+    ]
+}
