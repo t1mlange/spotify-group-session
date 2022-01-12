@@ -42,13 +42,17 @@
         }
 
         // Doesn't fail. If session already exists, the current session is returned.
-        const res_join = await Spicetify.CosmosAsync.get(`https://spclient.wg.spotify.com/social-connect/v2/sessions/current_or_new?local_device_id=${local_device_id}&type=REMOTE`);
-        
-        session_id = res_join["session_id"];
-        join_session_token = res_join["join_session_token"];
-        users = res_join["session_members"];
-        alive_job = setInterval(checkAlive, ALIVE_INTERVAL);
-        imageCache = {};
+        try {
+            const res_join = await Spicetify.CosmosAsync.get(`https://spclient.wg.spotify.com/social-connect/v2/sessions/current_or_new?local_device_id=${local_device_id}&type=REMOTE`);
+            
+            session_id = res_join["session_id"];
+            join_session_token = res_join["join_session_token"];
+            users = res_join["session_members"];
+            alive_job = setInterval(checkAlive, ALIVE_INTERVAL);
+            imageCache = {};
+        } catch (e) {
+            Spicetify.showNotification("Session creation failed. Make sure your connected to the internet and the account has Spotify Premium.");
+        }
     }
 
     const deleteSession = async () => {

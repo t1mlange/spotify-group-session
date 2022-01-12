@@ -1,5 +1,7 @@
 # spotify-group-session
-Brings Spotify Group Sessions to the desktop client.
+Brings Spotify Group Sessions to the desktop client. 
+
+**Important:** Requires Spotify Premium.
 
 ![Preview](preview.png)
 
