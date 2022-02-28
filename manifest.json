@@ -1,6 +1,6 @@
 {
-    "name": "Spotify Group Session",
-    "description": "Brings Spotify group session to desktop",
+    "name": "Modified Spotify Group Session",
+    "description": "Brings Spotify group session to desktop now with more fullscreen support",
     "preview": "preview.png",
     "main": "src/group-session.js",
     "readme": "README.md",
