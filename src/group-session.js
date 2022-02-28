@@ -311,34 +311,47 @@
             return;
         }
         const main = document.querySelector(".npv-main-container");
-        if (main == null) {
-            return;
-        }
-        if (document.getElementById("spicetify-scancode-fullscreen") != null) {
-            return;
-        }
-        const img_bg_color = "1ED760"; // spotify green
-        const img_text_color = "black"; // or white
-        const width = "600";
-        const join_img = `https://scannables.scdn.co/uri/plain/png/${img_bg_color}/${img_text_color}/${width}/spotify%3Asocialsession%3A${join_session_token}`;
-        
-        const imgEl = document.createElement("img");
-        imgEl.id = "spicetify-scancode-fullscreen";
-        imgEl.src = join_img;
-        imgEl.style.opacity = "0.5";
-        imgEl.style.position = "absolute";
-        imgEl.style.bottom = "36em";
-        imgEl.style.right = "14em";
-        imgEl.style.width = "62em";
+        if (main != null && document.getElementById("spicetify-scancode-fullscreen") != null) {
+            const img_bg_color = "1ED760"; // spotify green
+            const img_text_color = "black"; // or white
+            const width = "600";
+            const join_img = `https://scannables.scdn.co/uri/plain/png/${img_bg_color}/${img_text_color}/${width}/spotify%3Asocialsession%3A${join_session_token}`;
 
-        main.appendChild(imgEl);
+            const imgEl1 = document.createElement("img");
+            imgEl1.id = "spicetify-scancode-fullscreen";
+            imgEl1.src = join_img;
+            imgEl1.style.opacity = "0.5";
+            imgEl1.style.position = "absolute";
+            imgEl1.style.bottom = "36em";
+            imgEl1.style.right = "14em";
+            imgEl1.style.width = "62em";
+
+            main.appendChild(imgEl1);
+        }
+        const fsd = document.querySelector("#fsd-foreground");
+        if (fsd != null && document.getElementById("spicetify-scancode-fullscreen") != null) {
+            const img_bg_color = "1ED760"; // spotify green
+            const img_text_color = "black"; // or white
+            const width = "600";
+            const join_img = `https://scannables.scdn.co/uri/plain/png/${img_bg_color}/${img_text_color}/${width}/spotify%3Asocialsession%3A${join_session_token}`;
+
+            const imgEl2 = document.createElement("img");
+            imgEl2.id = "spicetify-scancode-fullscreen";
+            imgEl2.src = join_img;
+            imgEl2.style.opacity = "0.5";
+            imgEl2.style.position = "absolute";
+            imgEl2.style.bottom = "15em";
+            imgEl2.style.right = "4em";
+            imgEl2.style.width = "45em";
+
+            fsd.appendChild(imgEl2);
+        }
+        return;
     }
 
     const onFullscreen = (e) => {
         setTimeout(tryInsertFullScreen, 100);
     }
-
-
 
     /***********
      * General *
