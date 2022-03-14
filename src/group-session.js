@@ -427,7 +427,7 @@
         enterLink.type = "text";
         enterLink.onkeyup = (e) => {
             if (e.key === "Enter") {
-                handleConfirmJoinButtonPressed();
+                document.getElementById("confirm-join-button").click();
             }
         };
         enterLink.placeholder = `https://open.spotify.com/socialsession/`;
@@ -437,6 +437,7 @@
         containerDiv.appendChild(enterLink);
 
         const confirmJoinButton = document.createElement("button");
+        confirmJoinButton.id = "confirm-join-button";
         confirmJoinButton.addEventListener("click", handleConfirmJoinButtonPressed);
         confirmJoinButton.classList.add("main-buttons-button", "main-button-outlined");
         confirmJoinButton.textContent = "Join";
