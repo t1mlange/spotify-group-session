@@ -14,6 +14,8 @@
 
     // Interval in which to check if the session is still alive
     const ALIVE_INTERVAL = 5000;
+    // Interval for the current session check
+    const SESSION_CHECK_INTERVAL = 5000;
 
     // Global enable state
     let isEnabled;
@@ -23,119 +25,124 @@
     let isJoiningSession;
     // Whether user just triggered a link copy
     let isCopyingLink;
+    // Device ID of the local desktop client
+    let local_device_id;
     // Private session id
     let session_id;
     // Whether user is the owner of the group session
     let is_session_owner;
     // Public session token used for others to join
     let join_session_token;
-    // Contains the interval id
+    // Contains the interval id for the session heartbeat
     let alive_job;
+    // Contains the interval id for the task checking for an existing session
+    let session_check_job;
     // Cache of users listening
     let users;
     // Caching profile picture links to save api calls
     let imageCache;
 
+    const buildURL = (url, queryParams) => {
+        const params = new URLSearchParams(queryParams).toString();
+        return `${url}?${params}`;
+    }
 
     /*************
      * API Calls *
      *************/
     const createSession = async () => {
-        const local_device_id = Spicetify.Player.data.play_origin.device_identifier;
-        if (local_device_id == null) {
-            Spicetify.showNotification("Local device id is unknown. Try to play music before creating a new session.");
-            return;
-        }
-
         // Doesn't fail. If session already exists, the current session is returned.
         try {
-            const res_join = await Spicetify.CosmosAsync.get(`https://spclient.wg.spotify.com/social-connect/v2/sessions/current_or_new?local_device_id=${local_device_id}&type=REMOTE`);
-            session_id = res_join["session_id"];
-            join_session_token = res_join["join_session_token"];
-            is_session_owner = res_join["is_session_owner"];
-            users = res_join["session_members"];
-            alive_job = setInterval(checkAlive, ALIVE_INTERVAL);
-            imageCache = {};
+            const endpoint = buildURL(
+                "https://spclient.wg.spotify.com/social-connect/v2/sessions/current_or_new", 
+                { local_device_id: local_device_id, type: "REMOTE" });
+            const response = await Spicetify.CosmosAsync.get(endpoint);
+            setCurrentSession(response);
         } catch (e) {
             Spicetify.showNotification("Session creation failed. Make sure your connected to the internet and the account has Spotify Premium.");
         }
     }
 
-    const joinSession = async (sessionId) => {
-        const local_device_id = Spicetify.Player.data.play_origin.device_identifier;
-        if (local_device_id == null) {
-            Spicetify.showNotification("Local device id is unknown. Try to play music before creating a new session.");
-            return;
-        }
-
+    const joinSession = async (sessionToken) => {
         // Doesn't fail. If session already exists, the current session is returned.
         try {
-            const res_join = await Spicetify.CosmosAsync.post(`https://spclient.wg.spotify.com/social-connect/v2/sessions/join/${sessionId}/?join_type=deeplinking&local_device_id=${local_device_id}&playback_control=listen_and_control`);
-            session_id = res_join["session_id"];
-            join_session_token = res_join["join_session_token"];
-            is_session_owner = res_join["is_session_owner"];
-            users = res_join["session_members"];
-            alive_job = setInterval(checkAlive, ALIVE_INTERVAL);
-            imageCache = {};
+            const endpoint = buildURL(
+                `https://spclient.wg.spotify.com/social-connect/v2/sessions/join/${sessionToken}`, 
+                {
+                    join_type: "deeplinking",
+                    local_device_id: local_device_id,
+                    playback_control: "listen_and_control"
+                });
+            const response = await Spicetify.CosmosAsync.post(endpoint);
+            setCurrentSession(response);
+            return true;
         } catch (e) {
             Spicetify.showNotification("Session joining failed. Make sure your connected to the internet and the account has Spotify Premium.");
         }
+        return false;
     }
 
     const leaveSession = async () => {
-        const local_device_id = Spicetify.Player.data.play_origin.device_identifier;
-
-        if (local_device_id == null) {
-            Spicetify.showNotification("Local device id is unknown.");
-            return;
-        }
-
-        if (session_id != null) {
+        if (session_id !== null) {
             // On success, the response is empty.
             // On error, it contains error_type and message.
-            const res_leave = await Spicetify.CosmosAsync.post(`https://spclient.wg.spotify.com/social-connect/v3/sessions/${session_id}/leave?local_device_id=${local_device_id}`);
+            const endpoint = buildURL(
+                `https://spclient.wg.spotify.com/social-connect/v3/sessions/${session_id}/leave`, 
+                { local_device_id: local_device_id });
+            const response = await Spicetify.CosmosAsync.post(endpoint);
 
-            if ("error_type" in res_leave) {
-                Spicetify.showNotification(res_leave.message);
+            if ("error_type" in response) {
+                Spicetify.showNotification(response.message);
             }
         }
         
-        // cleanup
-        clearGlobals();
+        clearCurrentSession();
     }
 
     const deleteSession = async () => {
-        const local_device_id = Spicetify.Player.data.play_origin.device_identifier;
-
-        if (local_device_id == null) {
-            Spicetify.showNotification("Local device id is unknown.");
-            return;
-        }
-
-        if (session_id != null) {
+        if (session_id !== null) {
             // On success, the response is empty.
             // On error, it contains error_type and message.
-            const res_leave = await Spicetify.CosmosAsync.del(`https://spclient.wg.spotify.com/social-connect/v3/sessions/${session_id}?local_device_id=${local_device_id}`);
+            const endpoint = buildURL(
+                `https://spclient.wg.spotify.com/social-connect/v3/sessions/${session_id}`, 
+                { local_device_id: local_device_id });
+            const response = await Spicetify.CosmosAsync.del(endpoint);
 
-            if ("error_type" in res_leave) {
-                Spicetify.showNotification(res_leave.message);
+            if ("error_type" in response) {
+                Spicetify.showNotification(response.message);
             }
         }
-        
-        // cleanup
-        clearGlobals();
+
+        clearCurrentSession();
     }
 
-    const checkAlive = async () => {
+    const getCurrentSession = async () => {
         try {
-            const res_info = await Spicetify.CosmosAsync.get(`https://spclient.wg.spotify.com/social-connect/v2/sessions/info/${join_session_token}`);
-            users = res_info["session_members"];
-        } catch (ex) {
-            Spicetify.showNotification("Session died unexpectedly.");
-            clearGlobals();
+            const endpoint = buildURL(
+                `https://spclient.wg.spotify.com/social-connect/v2/sessions/current`,
+                { local_device_id: local_device_id });
+            const response = await Spicetify.CosmosAsync.get(endpoint);
+            if ("initialSessionType" in response && response["initialSessionType"] === "REMOTE") {
+                return response;
+            }
+        } catch (e) {
+            // console.error(e);
+            // console.error("Error checking current session");
+            return null;
         }
+        return null;
     }
 
+    const getSessionMembers = async () => {
+        try {
+            const response = await Spicetify.CosmosAsync.get(
+                `https://spclient.wg.spotify.com/social-connect/v2/sessions/info/${join_session_token}`);
+            return response["session_members"];
+        } catch (ex) {
+            return null;
+        }
+        return null;
+    }
 
     /******************
      * Listener Modal *
@@ -205,7 +212,7 @@
     }
 
     const showUserList = async (e) => {
-        if (session_id == null) {
+        if (session_id === null) {
             return;
         }
 
@@ -380,7 +387,7 @@
         return containerDiv;
     }
 
-    const extractSessionId = (sessionLink) => {
+    const extractSessionToken = (sessionLink) => {
         const prefix = "open.spotify.com/socialsession/";
         let startIndex = sessionLink.indexOf(prefix);
         if (startIndex === -1) { // Obviously invalid link
@@ -401,9 +408,9 @@
         const enterLinkField = document.getElementById("spicetify-group-session-join-link");
         
         // @ts-ignore
-        const sessionId = extractSessionId(enterLinkField.value);
-        if (sessionId !== null) {
-            await joinSession(sessionId);
+        const sessionToken = extractSessionToken(enterLinkField.value);
+        if (sessionToken !== null) {
+            await joinSession(sessionToken);
             isJoiningSession = false;
         } else {
             Spicetify.showNotification("Could not join session. Maybe the session link is invalid?");
@@ -458,18 +465,18 @@
     const updateMenu = () => {
         // remove the old menu if exists
         const oldMenu = document.getElementById("spicetify-group-session-menu");
-        if (oldMenu != null) {
+        if (oldMenu !== null) {
             oldMenu.remove();
         }
 
         const deviceMenu = document.querySelector(".connect-device-list-content");
-        if (!isEnabled || deviceMenu == null) {
+        if (!isEnabled || deviceMenu === null) {
             return;
         }
 
         // get the new menu
         let containerDiv;
-        if (session_id != null && join_session_token != null && is_session_owner != null) {
+        if (session_id !== null && join_session_token !== null && is_session_owner !== null) {
             containerDiv = buildSessionMenu();
         } else if (isJoiningSession) {
             containerDiv = buildJoinMenu();
@@ -487,14 +494,14 @@
      * Fullscreen *
      **************/
     const tryInsertFullScreen = () => {
-        if (join_session_token == null) {
+        if (join_session_token === null) {
             return;
         }
         const main = document.querySelector(".npv-main-container");
-        if (main == null) {
+        if (main === null) {
             return;
         }
-        if (document.getElementById("spicetify-scancode-fullscreen") != null) {
+        if (document.getElementById("spicetify-scancode-fullscreen") !== null) {
             return;
         }
         const img_bg_color = "1ED760"; // spotify green
@@ -519,7 +526,6 @@
     }
 
 
-
     /***********
      * General *
      ***********/
@@ -530,7 +536,7 @@
 
         const target = e.target;
         // Make sure we accutally have an element
-        if (target == null || !("classList" in target)) {
+        if (target === null || !("classList" in target)) {
             return;
         }
 
@@ -546,29 +552,106 @@
         }
     }
 
-    const clearGlobals = () => {
+    const checkCurrentSession = async () => {
+        const response = await getCurrentSession();
+        if (response !== null) {
+            try {
+                await joinSession(response.join_session_token);
+                Spicetify.showNotification("Connected to an existing groups session!");
+                updateMenu();
+            } catch (e) {
+                console.error(e);
+                console.error("Error checking current session");
+            }
+        }
+    }
+
+    const checkAlive = async () => {
+        const response = await getSessionMembers();
+        if (response !== null) {
+            users = response;
+        } else {
+            Spicetify.showNotification("Session has been ended.");
+            clearCurrentSession();
+            updateMenu();
+        }
+    }
+
+    const setCurrentSession = (data) => {
+        session_id = data["session_id"];
+        is_session_owner = data["is_session_owner"];
+        join_session_token = data["join_session_token"];
+        users = data["session_members"];
+        imageCache = {};
+        alive_job = setInterval(checkAlive, ALIVE_INTERVAL);
+        clearInterval(session_check_job);
+    }
+
+    const clearCurrentSession = (shouldStartChecking = true) => {
         session_id = null;
         is_session_owner = null;
         join_session_token = null;
         imageCache = null;
         users = null;
         clearInterval(alive_job);
+        if (shouldStartChecking) {
+            clearInterval(session_check_job);
+            session_check_job = setInterval(checkCurrentSession, SESSION_CHECK_INTERVAL);
+        }
     }
 
-    const initialize = () => {
+    const fetchLocalDevices = async () => {
+        /**
+         * Found in xpui.js, which used the Cosmos sub call instead.
+         * However, it seems like `sub` subscribes to a specific
+         * endpoint - we only need to GET it once.
+         */
+        return await Spicetify.CosmosAsync.get(
+            "sp://connect/v1", null, {
+                "include-local-device": "1"
+            });
+    }
+
+    const initialize = async () => {
         injectListenerStyles();
         document.addEventListener("DOMNodeInserted", insertObserver);
         document.addEventListener("copy", handleCopyLink);
-        const fs_btn = document.querySelector(".main-nowPlayingBar-right > .ExtraControls > button.control-button");
-        fs_btn.addEventListener("click", onFullscreen);
+
+        const registerFullscreenClick = () => {
+            const fs_btn = document.querySelector(".main-nowPlayingBar-right > .ExtraControls > button.control-button");
+            if (fs_btn !== null) {
+                fs_btn.addEventListener("click", onFullscreen);
+            } else {
+                setTimeout(registerFullscreenClick, 1000);
+            }
+        }
+        registerFullscreenClick();
+
+        const data = await fetchLocalDevices();
+        try {
+            local_device_id = Spicetify.Player.data.play_origin.device_identifier;
+            for (const device of data.devices) {
+                if (device.is_local) {
+                    local_device_id = device.physical_identifier;
+                    break;
+                }
+            }
+            console.log(`Found local device id (${local_device_id})`);
+        } catch (e) {
+            console.warn("Could not fetch local device ID. Resorting to backup option.");
+        } finally {
+            clearCurrentSession();
+        }
     }
 
     const terminate = () => {
         document.removeEventListener("DOMNodeInserted", insertObserver);
         document.removeEventListener("copy", handleCopyLink);
         const fs_btn = document.querySelector(".main-nowPlayingBar-right > .ExtraControls > button.control-button");
-        fs_btn.addEventListener("click", onFullscreen);
-        clearGlobals();
+        if (fs_btn !== null) {
+            fs_btn.removeEventListener("click", onFullscreen);
+        }
+        clearCurrentSession(false);
         updateMenu();
     }
 
