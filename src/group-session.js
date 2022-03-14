@@ -556,7 +556,8 @@
         const response = await getCurrentSession();
         if (response !== null) {
             try {
-                await joinSession(response.join_session_token);
+                // await joinSession(response.join_session_token);
+                setCurrentSession(response);
                 Spicetify.showNotification("Connected to an existing groups session!");
                 updateMenu();
             } catch (e) {
