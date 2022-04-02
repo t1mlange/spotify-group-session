@@ -494,7 +494,7 @@
      * Fullscreen *
      **************/
     const tryInsertFullScreen = () => {
-        if (join_session_token === null) {
+        if (!showScanCode || join_session_token == null) {
             return;
         }
         const main = document.querySelector(".npv-main-container");
