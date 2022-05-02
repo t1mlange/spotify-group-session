@@ -157,13 +157,13 @@
                 padding: 10px;
                 border-radius: 5px;
             }`, 
-        style.cssRules.length);
+            style.cssRules.length);
         style.insertRule(`
             .spicetify-user-list-item:hover {
                 background-color: rgba(255, 255, 255, 0.1);
                 text-decoration: none;
             }`, 
-        style.cssRules.length);
+            style.cssRules.length);
         style.insertRule(`
             .spicetify-user-list-item-img {
                 width: 50px;
@@ -171,7 +171,45 @@
                 border-radius: 50px;
                 margin-right: 15px;
             }`, 
-        style.cssRules.length);
+            style.cssRules.length);
+        style.insertRule(`
+            .spicetify-group-button {
+                box-sizing: border-box;
+                font-family: var(--font-family,spotify-circular),Helvetica,Arial,sans-serif;
+                -webkit-tap-highlight-color: transparent;
+                font-size: 1rem;
+                line-height: 1.5rem;
+                font-weight: 700;
+                border: 0px;
+                border-radius: 500px;
+                display: inline-block;
+                position: relative;
+                text-align: center;
+                text-decoration: none;
+                text-transform: none;
+                touch-action: manipulation;
+                transition-duration: 33ms;
+                transition-property: background-color, border-color, color, box-shadow, filter, transform;
+                user-select: none;
+                vertical-align: middle;
+                transform: translate3d(0px, 0px, 0px);
+                padding: 0px;
+                min-inline-size: 0px;
+                align-self: center;
+                position: relative;
+                background-color: var(--background-base,#1ed760);
+                color: var(--text-base,#000000);
+                border-radius: 500px;
+                padding-block: 12px;
+                padding-inline: 32px;
+            }`, 
+            style.cssRules.length);
+        style.insertRule(`
+            .spicetify-group-button:hover {
+                background-color: var(--background-highlight,#1fdf64);
+                transform: scale(1.04);
+            }`, 
+            style.cssRules.length);
     }
 
     const getUserItem = async (user) => {
@@ -267,6 +305,10 @@
         tooltip.textContent = "What are group sessions?";
 
         containerDiv.appendChild(titleDiv);
+        
+        const lineBreakDiv = document.createElement("div");
+        lineBreakDiv.style.width = "100%";
+        containerDiv.appendChild(lineBreakDiv);
 
         return containerDiv;
     }
@@ -293,22 +335,23 @@
         
         const buttonDiv = document.createElement("div");
         buttonDiv.style.display = "flex";
+        buttonDiv.style.flexGrow = "1";
         buttonDiv.style.marginTop = "5px";
 
         const createButton = document.createElement("button");
         createButton.style.flex = "1";
         createButton.style.marginRight = "7px";
         createButton.style.padding = "8px 8px";
-        createButton.classList.add("main-buttons-button", "main-button-primary");
-        createButton.textContent = "Start Session";
+        createButton.classList.add("encore-bright-accent-set", "spicetify-group-button");
+        createButton.textContent = "Start";
         createButton.addEventListener("click", handleCreateButtonPressed);
         buttonDiv.appendChild(createButton);
 
         const joinButton = document.createElement("button");
         joinButton.style.flex = "1";
         joinButton.style.padding = "8px 8px";
-        joinButton.classList.add("main-buttons-button", "main-button-primary");
-        joinButton.textContent = "Join Session";
+        joinButton.classList.add("encore-bright-accent-set", "spicetify-group-button");
+        joinButton.textContent = "Join";
         joinButton.addEventListener("click", handleJoinButtonPressed);
         buttonDiv.appendChild(joinButton);
 
@@ -371,14 +414,14 @@
 
         const listenerButton = document.createElement("button");
         listenerButton.addEventListener("click", showUserList);
-        listenerButton.classList.add("main-buttons-button", "main-button-outlined");
+        listenerButton.classList.add("spicetify-group-button");
         listenerButton.textContent = "Show Listeners";
         listenerButton.style.marginBottom = "12px";
         containerDiv.appendChild(listenerButton);
 
         const closeButton = document.createElement("button");
         closeButton.addEventListener("click", handleLeaveButtonPressed);
-        closeButton.classList.add("main-buttons-button", "main-button-outlined");
+        closeButton.classList.add("spicetify-group-button");
         closeButton.textContent = "Close Session";
         closeButton.style.fontSize = "8px";
         closeButton.style.lineHeight = "8px";
@@ -446,7 +489,7 @@
         const confirmJoinButton = document.createElement("button");
         confirmJoinButton.id = "confirm-join-button";
         confirmJoinButton.addEventListener("click", handleConfirmJoinButtonPressed);
-        confirmJoinButton.classList.add("main-buttons-button", "main-button-outlined");
+        confirmJoinButton.classList.add("spicetify-group-button");
         confirmJoinButton.textContent = "Join";
         confirmJoinButton.style.marginBottom = "12px";
         confirmJoinButton.style.marginRight = "5px";
@@ -454,7 +497,7 @@
 
         const cancelButton = document.createElement("button");
         cancelButton.addEventListener("click", handleCancelJoinButtonPressed);
-        cancelButton.classList.add("main-buttons-button", "main-button-outlined");
+        cancelButton.classList.add("spicetify-group-button");
         cancelButton.textContent = "Cancel";
         cancelButton.style.marginBottom = "12px";
         containerDiv.appendChild(cancelButton);
