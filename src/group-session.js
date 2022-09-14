@@ -512,9 +512,15 @@
             oldMenu.remove();
         }
 
-        const deviceMenu = document.querySelector(".connect-device-list-content");
-        if (!isEnabled || deviceMenu === null) {
+        if (!isEnabled)
             return;
+
+        let deviceMenu = document.querySelector(".connect-device-list-content");
+        if (deviceMenu === null) {
+            // try to find the menu with version 1.1.93.896+
+            deviceMenu = document.querySelector('[aria-labelledby="device-picker-icon-button"]');
+            if (deviceMenu === null)
+                return;
         }
 
         // get the new menu
@@ -588,7 +594,8 @@
         if (target.classList.contains("connect-device-list-container--is-visible") || 
             target.classList.contains("connect-device-list") ||
             ("previousSibling" in target && target.previousSibling !== null && 
-             target.previousSibling.id === "spicetify-group-session-menu")
+             target.previousSibling.id === "spicetify-group-session-menu") ||
+            target.querySelector('[aria-labelledby="device-picker-icon-button"]') !== null
         ) {
             updateMenu();
             return;
