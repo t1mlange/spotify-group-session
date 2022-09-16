@@ -1,7 +1,7 @@
 //@ts-check
 
 // NAME: Group Session
-// AUTHOR: Tim Lange (@timll)
+// AUTHOR: Tim Lange (@timll), Louis (@louisasanaka)
 // DESCRIPTION: Brings group sessions to the desktop client.
 
 /// <reference path="../globals.d.ts" />
@@ -512,15 +512,14 @@
             oldMenu.remove();
         }
 
-        if (!isEnabled)
+        const deviceMenu = document.getElementById("context-menu");
+        if (!isEnabled || deviceMenu === null) {
             return;
+        }
 
-        let deviceMenu = document.querySelector(".connect-device-list-content");
-        if (deviceMenu === null) {
-            // try to find the menu with version 1.1.93.896+
-            deviceMenu = document.querySelector('[aria-labelledby="device-picker-icon-button"]');
-            if (deviceMenu === null)
-                return;
+        const listDiv = deviceMenu.children.length > 0 ? deviceMenu.children[0] : null;
+        if (listDiv === null) {
+            return;
         }
 
         // get the new menu
@@ -535,7 +534,7 @@
             join_session_token = null;
             containerDiv = buildStartMenu();
         }
-        deviceMenu.appendChild(containerDiv);
+        listDiv.appendChild(containerDiv);
     }
 
 
@@ -591,11 +590,9 @@
 
         // Update menu on display of the device menu, and when devices appear & disappear
         // @ts-ignore
-        if (target.classList.contains("connect-device-list-container--is-visible") || 
-            target.classList.contains("connect-device-list") ||
+        if (target.id === "context-menu" ||
             ("previousSibling" in target && target.previousSibling !== null && 
-             target.previousSibling.id === "spicetify-group-session-menu") ||
-            target.querySelector('[aria-labelledby="device-picker-icon-button"]') !== null
+             target.previousSibling.id === "spicetify-group-session-menu")
         ) {
             updateMenu();
             return;
@@ -679,6 +676,7 @@
         registerFullscreenClick();
 
         const data = await fetchLocalDevices();
+        console.log('Fetching...');
         try {
             local_device_id = Spicetify.Player.data.play_origin.device_identifier;
             for (const device of data.devices) {
