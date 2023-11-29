@@ -57,6 +57,7 @@
                 "https://spclient.wg.spotify.com/social-connect/v2/sessions/current_or_new", 
                 { local_device_id: local_device_id, type: "REMOTE" });
             const response = await Spicetify.CosmosAsync.get(endpoint);
+            console.debug(response);
             setCurrentSession(response);
         } catch (e) {
             Spicetify.showNotification("Session creation failed. Make sure your connected to the internet and the account has Spotify Premium.");
@@ -74,6 +75,7 @@
                     playback_control: "listen_and_control"
                 });
             const response = await Spicetify.CosmosAsync.post(endpoint);
+            console.debug(response);
             setCurrentSession(response);
             return true;
         } catch (e) {
@@ -90,6 +92,7 @@
                 `https://spclient.wg.spotify.com/social-connect/v3/sessions/${session_id}/leave`, 
                 { local_device_id: local_device_id });
             const response = await Spicetify.CosmosAsync.post(endpoint);
+            console.debug(response);
 
             if ("error_type" in response) {
                 Spicetify.showNotification(response.message);
@@ -107,6 +110,7 @@
                 `https://spclient.wg.spotify.com/social-connect/v3/sessions/${session_id}`, 
                 { local_device_id: local_device_id });
             const response = await Spicetify.CosmosAsync.del(endpoint);
+            console.debug(response);
 
             if ("error_type" in response) {
                 Spicetify.showNotification(response.message);
@@ -122,6 +126,7 @@
                 `https://spclient.wg.spotify.com/social-connect/v2/sessions/current`,
                 { local_device_id: local_device_id });
             const response = await Spicetify.CosmosAsync.get(endpoint);
+            console.debug(response);
             if ("initialSessionType" in response && response["initialSessionType"] === "REMOTE") {
                 return response;
             }
@@ -137,6 +142,7 @@
         try {
             const response = await Spicetify.CosmosAsync.get(
                 `https://spclient.wg.spotify.com/social-connect/v2/sessions/info/${join_session_token}`);
+                console.debug(response);
             return response["session_members"];
         } catch (ex) {
             return null;
@@ -393,13 +399,15 @@
         const img_bg_color = "1ED760"; // spotify green
         const img_text_color = "black"; // or white
         const width = "600";
-        const join_img = `https://scannables.scdn.co/uri/plain/png/${img_bg_color}/${img_text_color}/${width}/spotify%3Asocialsession%3A${join_session_token}`;
 
-        const imgEl = document.createElement("img");
-        imgEl.src = join_img;
-        imgEl.style.width = "100%";
-        imgEl.style.paddingBottom = "12px";
-        containerDiv.appendChild(imgEl);
+        /* TODO: check from where the new QR codes come from */
+        // const join_img = `https://scannables.scdn.co/uri/plain/png/${img_bg_color}/${img_text_color}/${width}/spotify%3Asocialsession%3A${join_session_token}`;
+
+        // const imgEl = document.createElement("img");
+        // imgEl.src = join_img;
+        // imgEl.style.width = "100%";
+        // imgEl.style.paddingBottom = "12px";
+        // containerDiv.appendChild(imgEl);
 
         const copyLink = document.createElement("input");
         copyLink.id = "spicetify-group-session-menu-link";
@@ -651,16 +659,16 @@
         }
     }
 
-    const fetchLocalDevices = async () => {
-        /**
-         * Found in xpui.js, which used the Cosmos sub call instead.
-         * However, it seems like `sub` subscribes to a specific
-         * endpoint - we only need to GET it once.
-         */
-        return await Spicetify.CosmosAsync.get(
-            "sp://connect/v1", null, {
-                "include-local-device": "1"
-            });
+    const getLocalDeviceId = () => {
+        const state = Spicetify.Platform.ConnectAPI.getState();
+        console.debug(state.devices);
+        for (const device of state.devices) {
+            if (device.isLocal) {
+                return device.connectStateId;
+            }
+        }
+
+        throw new Error("Could not find local device in deviced");
     }
 
     const initialize = async () => {
@@ -678,18 +686,11 @@
         }
         registerFullscreenClick();
 
-        const data = await fetchLocalDevices();
         try {
-            local_device_id = Spicetify.Player.data.play_origin.device_identifier;
-            for (const device of data.devices) {
-                if (device.is_local) {
-                    local_device_id = device.physical_identifier;
-                    break;
-                }
-            }
-            console.log(`Found local device id (${local_device_id})`);
+            local_device_id = getLocalDeviceId();
+            console.debug(`Found local device id (${local_device_id})`);
         } catch (e) {
-            console.warn("Could not fetch local device ID. Resorting to backup option.");
+            console.warn("Could not fetch local device ID. Resorting to backup option.", e);
         } finally {
             clearCurrentSession();
         }
