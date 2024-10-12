@@ -1,3 +1,6 @@
+> [!Important]  
+> With the new UI (>=1.2.48), Spotify natively implemented group sessions aka jams in the desktop client. You can now right click on a song and click "start jam" to open a group session. This extension is now obsolete.
+
 # spotify-group-session
 Brings Spotify Group Sessions to the desktop client. 
 
